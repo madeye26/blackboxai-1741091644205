@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>كشف راتب</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+        @media print {
+            .no-print { display: none; }
+            .print-break-inside-avoid { break-inside: avoid; }
+            body { padding: 20px; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <!-- Header -->
+            <div class="text-center border-b pb-6 mb-6">
+                <h1 class="text-2xl font-bold mb-4">كشف راتب</h1>
+                <div class="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                    <div class="text-right">
+                        <p>الشهر: <span id="payslipMonth" class="font-semibold"></span></p>
+                        <p>التاريخ: <span id="payslipDate" class="font-semibold"></span></p>
+                    </div>
+                    <div class="text-right">
+                        <p>كود الموظف: <span id="employeeCode" class="font-semibold"></span></p>
+                        <p>المسمى الوظيفي: <span id="jobTitle" class="font-semibold"></span></p>
+                    </div>
+                </div>
+                <h2 id="employeeName" class="text-xl font-semibold mt-4"></h2>
+            </div>
+
+            <!-- Main Content -->
+            <div class="grid grid-cols-2 gap-8">
+                <!-- Earnings Section -->
+                <div class="print-break-inside-avoid">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-700">المستحقات</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between border-b pb-2">
+                            <span>الراتب الأساسي</span>
+                            <span id="basicSalary" class="font-semibold"></span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span>الأوفرتايم (<span id="overtimeHours"></span> ساعة)</span>
+                            <span id="overtimeAmount" class="font-semibold"></span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span>الحوافز الشهرية</span>
+                            <span id="monthlyIncentives" class="font-semibold"></span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span>المكافأة</span>
+                            <span id="bonus" class="font-semibold"></span>
+                        </div>
+                        <div class="flex justify-between font-bold text-lg">
+                            <span>إجمالي المستحقات</span>
+                            <span id="grossSalary"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deductions Section -->
+                <div class="print-break-inside-avoid">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-700">الخصومات</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between border-b pb-2">
+                            <span>السلف</span>
+                            <span id="deductionsAdvances" class="font-semibold text-red-600"></span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span>المشتريات</span>
+                            <span id="deductionsPurchases" class="font-semibold text-red-600"></span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span>الغياب (<span id="absenceDays"></span> يوم)</span>
+                            <span id="deductionsAbsence" class="font-semibold text-red-600"></span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span>الجزاءات</span>
+                            <span id="deductionsPenalties" class="font-semibold text-red-600"></span>
+                        </div>
+                        <div class="flex justify-between font-bold text-lg">
+                            <span>إجمالي الخصومات</span>
+                            <span id="totalDeductions" class="text-red-600"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Net Salary -->
+            <div class="mt-8 border-t pt-6">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold">صافي الراتب</h3>
+                    <span id="netSalary" class="text-xl font-bold text-green-600"></span>
+                </div>
+            </div>
+
+            <!-- Time Entries -->
+            <div class="mt-8 print-break-inside-avoid">
+                <h3 class="text-lg font-semibold mb-4 text-gray-700">سجل الحضور</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="px-4 py-2 text-right">التاريخ</th>
+                                <th class="px-4 py-2 text-right">الحضور</th>
+                                <th class="px-4 py-2 text-right">الانصراف</th>
+                                <th class="px-4 py-2 text-left">الساعات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="timeEntriesBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Print Button -->
+        <div class="flex justify-end gap-4 no-print">
+            <button onclick="window.print()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                طباعة كشف الراتب
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('ar-EG');
+        }
+
+        function formatTime(dateString) {
+            return new Date(dateString).toLocaleTimeString('ar-EG');
+        }
+
+        function formatCurrency(amount) {
+            return `${amount.toFixed(2)} ج.م`;
+        }
+
+        function formatMonth(monthStr) {
+            const [year, month] = monthStr.split('-');
+            const date = new Date(year, parseInt(month) - 1);
+            return new Intl.DateTimeFormat('ar-EG', { year: 'numeric', month: 'long' }).format(date);
+        }
+
+        async function loadPayslip() {
+            const pathParts = window.location.pathname.split('/');
+            const employeeId = pathParts[pathParts.length - 2];
+            const month = pathParts[pathParts.length - 1];
+            
+            try {
+                const response = await fetch(`/api/payslips/${employeeId}/${month}`);
+                const data = await response.json();
+                
+                // Update employee details
+                document.getElementById('payslipMonth').textContent = formatMonth(month);
+                document.getElementById('payslipDate').textContent = formatDate(data.payslip_date);
+                document.getElementById('employeeCode').textContent = data.salary.employee_code;
+                document.getElementById('employeeName').textContent = data.salary.employee_name;
+                document.getElementById('jobTitle').textContent = data.salary.employees.job_title;
+
+                // Update earnings
+                document.getElementById('basicSalary').textContent = formatCurrency(data.salary.basic_salary);
+                document.getElementById('overtimeHours').textContent = data.salary.overtime_hours;
+                document.getElementById('overtimeAmount').textContent = formatCurrency(data.salary.overtime_amount);
+                document.getElementById('monthlyIncentives').textContent = formatCurrency(data.salary.monthly_incentives);
+                document.getElementById('bonus').textContent = formatCurrency(data.salary.bonus);
+                document.getElementById('grossSalary').textContent = formatCurrency(data.salary.gross_salary);
+
+                // Update deductions
+                document.getElementById('deductionsAdvances').textContent = formatCurrency(data.salary.deductions_advances);
+                document.getElementById('deductionsPurchases').textContent = formatCurrency(data.salary.deductions_purchases);
+                document.getElementById('absenceDays').textContent = data.salary.absence_days;
+                document.getElementById('deductionsAbsence').textContent = formatCurrency(data.salary.deductions_absence);
+                document.getElementById('deductionsPenalties').textContent = formatCurrency(data.salary.deductions_penalties);
+                document.getElementById('totalDeductions').textContent = formatCurrency(data.salary.total_deductions);
+
+                // Update net salary
+                document.getElementById('netSalary').textContent = formatCurrency(data.salary.net_salary);
+
+                // Update time entries
+                const tbody = document.getElementById('timeEntriesBody');
+                tbody.innerHTML = '';
+                
+                data.timeEntries.forEach(entry => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-t';
+                    row.innerHTML = `
+                        <td class="px-4 py-2">${formatDate(entry.check_in)}</td>
+                        <td class="px-4 py-2">${formatTime(entry.check_in)}</td>
+                        <td class="px-4 py-2">${entry.check_out ? formatTime(entry.check_out) : '-'}</td>
+                        <td class="px-4 py-2 text-left">${entry.total_hours?.toFixed(1) || '-'}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+            } catch (error) {
+                console.error('Error loading payslip:', error);
+                alert('حدث خطأ أثناء تحميل كشف الراتب. يرجى المحاولة مرة أخرى.');
+            }
+        }
+
+        // Load payslip when page loads
+        document.addEventListener('DOMContentLoaded', loadPayslip);
+    </script>
+</body>
+</html>
